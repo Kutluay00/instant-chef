@@ -19,12 +19,13 @@ export const RecipeConstraintForm: React.FC<{ onSubmit: (values: { constraint: s
     >
       {({ errors, touched }) => (
         <Form className={className}>
+          <label htmlFor="constraint" className="block text-gray-800 italic font-medium mb-2">Add Constraint:</label>
           <div className="w-full flex gap-2">
-          <Field type="text" name="constraint" placeholder="Enter a constraint" className="flex-1 p-2"/>
-          <button type="submit" className='bg-white p-2'>Add</button>
+            <Field type="text" name="constraint" placeholder="Enter a constraint" className="flex-1 bg-white text-gray-800 border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <button type="submit" className='bg-gray-600 text-white px-4 py-2 rounded transition duration-200 border border-transparent hover:bg-gray-700 hover:border hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 font-semibold'>Add</button>
           </div>
           {errors.constraint && touched.constraint ? (
-            <div>{errors.constraint}</div>
+            <div className='text-white text-sm mt-2 bg-red-600 rounded px-4 py-2'>{errors.constraint}</div>
           ) : null}
         </Form>
       )}
