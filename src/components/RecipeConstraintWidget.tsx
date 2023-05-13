@@ -1,46 +1,88 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RecipeConstraintForm } from "./RecipeConstraintForm";
+import { api } from "~/utils/api";
 
 export const RecipeConstraintWidget: React.FC = () => {
-    const [constraints, setConstraints] = useState<string[]>([]);
+  const [constraints, setConstraints] = useState<string[]>([]);
+  const [recipeTitle, setRecipeTitle] = useState<string>("");
+  const { data, mutate } = api.openai.chatgpt.useMutation();
+  const { data: dalleData, mutate: dalleMutate } =
+    api.openai.dalle.useMutation();
 
-    return (
-        <div className="w-full md:w-1/3 p-2 flex flex-col items-center gap-12">
-            <div className="w-full">
-                {
-                    constraints.length > 0 && (
-                        <>
-                            <h2 className="text-xl text-gray-800 font-bold mb-2 italic">Constraints:</h2>
-                            <ul className="flex w-full gap-2 flex-wrap justify-start items-start">
-                                {constraints.map((constraint, i) => (
-                                    <li className="px-4 py-2 flex gap-2 items-center bg-gray-200 text-gray-800 rounded italic" key={i}>
-                                        {constraint}
-                                        <button
-                                            onClick={() => {
-                                                setConstraints((prevConstraints) => [...(prevConstraints.filter((_, j) => j !== i))])
-                                            }}
-                                            className="text-md font-bold transition-colors hover:text-red-500"
-                                        >
-                                            &times;
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    )
-                }
-            </div>
-            <RecipeConstraintForm
-                onSubmit={(values) => {
-                    if (values.constraint.trim() !== "") {
-                        setConstraints((prevConstraints) => ([...prevConstraints, values.constraint]))
-                    }
-                }}
-                className="w-full"
-            />
-            <button className="bg-indigo-600 text-gray-200 text-lg font-semibold px-4 py-2 rounded border border-transparent hover:border-indigo-400 hover:bg-indigo-700 transition-colors">
-                Get a Recipe!
-            </button>
-        </div>
-    );
-}
+  const handleSubmission = () => {
+    mutate({ messages: constraints });
+  };
+
+
+  useEffect(() => {
+    if(data) {
+      console.log(data);
+      const stringToParse = `{${data.split("{")[1]?.split("}")[0]}}`;
+      // console.log(stringToParse);
+      const lol = JSON.parse(stringToParse);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      // setRecipeTitle(lol.title);
+      // console.log(recipeTitle);
+      const title = lol.title;
+      console.log(title);
+      dalleMutate({ title: title });
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (dalleData) {
+      console.log(dalleData);
+    }
+  }, [dalleData]);
+
+  return (
+    <div className="flex w-full flex-col items-center gap-12 p-2 md:w-1/3">
+      <div className="w-full">
+        {constraints.length > 0 && (
+          <>
+            <h2 className="mb-2 text-xl font-bold italic text-gray-800">
+              Constraints:
+            </h2>
+            <ul className="flex w-full flex-wrap items-start justify-start gap-2">
+              {constraints.map((constraint, i) => (
+                <li
+                  className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 italic text-gray-800"
+                  key={i}
+                >
+                  {constraint}
+                  <button
+                    onClick={() => {
+                      setConstraints((prevConstraints) => [
+                        ...prevConstraints.filter((_, j) => j !== i),
+                      ]);
+                    }}
+                    className="text-md font-bold transition-colors hover:text-red-500"
+                  >
+                    &times;
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+      <RecipeConstraintForm
+        onSubmit={(values) => {
+          if (values.constraint.trim() !== "") {
+            setConstraints((prevConstraints) => [
+              ...prevConstraints,
+              values.constraint,
+            ]);
+          }
+        }}
+        className="w-full"
+      />
+      <button
+        onClick={handleSubmission}
+        className="rounded border border-transparent bg-indigo-600 px-4 py-2 text-lg font-semibold text-gray-200 transition-colors hover:border-indigo-400 hover:bg-indigo-700"
+      >
+        Get a Recipe!
+      </button>
+    </div>
+  );
+};
