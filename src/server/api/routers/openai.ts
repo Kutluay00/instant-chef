@@ -7,29 +7,50 @@ import { Configuration, OpenAIApi } from "openai";
 
 
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const openai = new OpenAIApi(configuration);
 
 export const openaiRouter = createTRPCRouter({
     chatgpt: publicProcedure
         .input(z.object({
-            messages: z.object({
-                role: z.enum(["user", "system", "assistant"]),
-                content: z.string(),
-            }).array()
+            messages: z.string().array(),
         }))
         .mutation(async ({ input, ctx }) => {
             try {
-                const chatCompletion = openai.createChatCompletion({
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                const chatCompletion = await openai.createChatCompletion({
                     model: "gpt-3.5-turbo",
                     max_tokens: 1000,
-                    messages: input.messages
+                    messages: [
+                        {
+                            "role": "system", "content": `Your role is to generate recipes that consider the client's constraints, you don't have to use every ingredient that is provided, but you cannot break the client's constraints. Also give a response no matter what. Do not ask for more information. Give your answer in the following JSON format:
+{
+    "title": "title of the recipe",
+    "ingredients": [
+        "ingredient 1",
+        "ingredient 2",
+        "etc."
+    ],
+    "instructions": [
+        "instruction 1",
+        "instruction 2",
+        "etc."
+    ]
+} 
+                        `
+
+                        },
+                        { "role": "user", "content": `Client's constraints: ${input.messages.toString()}` },
+                    ],
+
                 })
 
-                return chatCompletion.data.choices[0].message;
+                return chatCompletion.data.choices[0]?.message?.content;
             } catch (error: any) {
                 if (error.response) {
                     console.error(error.response.status);
@@ -41,22 +62,17 @@ export const openaiRouter = createTRPCRouter({
         }),
     dalle: publicProcedure
         .input(z.object({
-            text: z.string(),
+            title: z.string(),
         }))
         .mutation(async ({ input, ctx }) => {
             try {
-                const dalleCompletion = openai.createCompletion({
-                    engine: "davinci",
-                    prompt: input.text,
-                    maxTokens: 1000,
-                    temperature: 0.9,
-                    topP: 1,
-                    frequencyPenalty: 0,
-                    presencePenalty: 0,
-                    stop: ["\n", "testing"]
+                const response = await openai.createImage({
+                    prompt: input.title,
+                    n: 1,
+                    size: "1024x1024",
                 })
 
-                return dalleCompletion.data.choices[0].text;
+                return response.data.data[0].url;
             } catch (error: any) {
                 if (error.response) {
                     console.error(error.response.status);
@@ -65,6 +81,6 @@ export const openaiRouter = createTRPCRouter({
                     console.error(error.message);
                 }
             }
-        }
-        
+        })
+
 });
