@@ -45,7 +45,7 @@ export const openaiRouter = createTRPCRouter({
                         `
 
                         },
-                        { "role": "user", "content": `Client's constraints: ${input.messages.toString()}` },
+                        { "role": "user", "content": `Client's constraints: ${input.messages}` },
                     ],
 
                 })

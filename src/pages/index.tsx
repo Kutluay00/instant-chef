@@ -4,7 +4,7 @@ import { RecipeConstraintWidget } from "~/components/RecipeConstraintWidget";
 const Home: NextPage = () => {
 
   return (
-      <main className="w-screen h-screen flex items-center justify-center bg-gradient-to-t from-[#B7410E] to-[#FFD700]">
+      <main className="w-screen h-screen flex items-center justify-center bg-gradient-to-t from-[#B7410E] to-[#FFD700] overflow-y-auto overflow-x-hidden">
         <RecipeConstraintWidget />
       </main>
   );
